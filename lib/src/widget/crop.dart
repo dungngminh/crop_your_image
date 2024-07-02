@@ -8,8 +8,8 @@ import 'package:crop_your_image/src/widget/circle_crop_area_clipper.dart';
 import 'package:crop_your_image/src/widget/constants.dart';
 import 'package:crop_your_image/src/widget/rect_crop_area_clipper.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 
 typedef ViewportBasedRect = Rect;
 typedef ImageBasedRect = Rect;
@@ -17,6 +17,9 @@ typedef ImageBasedRect = Rect;
 typedef WillUpdateScale = bool Function(double newScale);
 typedef CornerDotBuilder = Widget Function(
     double size, EdgeAlignment edgeAlignment);
+
+typedef OverlayBuilder = Widget Function(
+    BuildContext context, Rect rect, double radius);
 
 typedef CroppingRectBuilder = ViewportBasedRect Function(
   ViewportBasedRect viewportRect,
@@ -129,6 +132,10 @@ class Crop extends StatelessWidget {
   /// (Advanced) Injected logic for parsing image detail.
   final ImageParser imageParser;
 
+
+  /// builder to place a widget inside the cropping area
+  final OverlayBuilder? overlayBuilder;
+
   Crop({
     super.key,
     required this.image,
@@ -154,6 +161,7 @@ class Crop extends StatelessWidget {
     this.imageCropper = defaultImageCropper,
     ImageParser? imageParser,
     this.scrollZoomSensitivity = 0.05,
+    this.overlayBuilder,
   })  : assert((initialSize ?? 1.0) <= 1.0,
             'initialSize must be less than 1.0, or null meaning not specified.'),
         this.imageParser = imageParser ?? defaultImageParser;
@@ -192,6 +200,7 @@ class Crop extends StatelessWidget {
             imageCropper: imageCropper,
             formatDetector: formatDetector,
             imageParser: imageParser,
+            overlayBuilder: overlayBuilder,
           ),
         );
       },
@@ -223,6 +232,7 @@ class _CropEditor extends StatefulWidget {
   final FormatDetector? formatDetector;
   final ImageParser imageParser;
   final double scrollZoomSensitivity;
+  final OverlayBuilder? overlayBuilder;
 
   const _CropEditor({
     super.key,
@@ -249,6 +259,7 @@ class _CropEditor extends StatefulWidget {
     required this.formatDetector,
     required this.imageParser,
     required this.scrollZoomSensitivity,
+    this.overlayBuilder
   });
 
   @override
@@ -626,6 +637,17 @@ class _CropEditorState extends State<_CropEditor> {
                   ),
                 ),
               ),
+              if (widget.overlayBuilder != null)
+                Positioned.fromRect(
+                  rect: _cropRect,
+                  child: IgnorePointer(
+                    child: widget.overlayBuilder!(
+                      context,
+                      _cropRect,
+                      widget.radius,
+                    ),
+                  ),
+                ),
               IgnorePointer(
                 child: ClipPath(
                   clipper: _withCircleUi
