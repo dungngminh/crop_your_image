@@ -59,7 +59,7 @@ class _CropSampleState extends State<CropSample> {
   var _isSumbnail = false;
   var _isCropping = false;
   var _isCircleUi = false;
-  Crop? _croppedData;
+  CropResult? _croppedData;
   var _statusText = '';
 
   @override
@@ -185,9 +185,9 @@ class _CropSampleState extends State<CropSample> {
                     ],
                   ),
                   replacement: Center(
-                    child: _croppedData == null
+                    child: _croppedData?.image == null
                         ? SizedBox.shrink()
-                        : Image.memory(_croppedData!),
+                        : Image.memory(_croppedData!.image!),
                   ),
                 ),
               ),
