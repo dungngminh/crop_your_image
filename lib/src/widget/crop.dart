@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:crop_your_image/crop_your_image.dart';
+import 'package:crop_your_image/src/logic/cropper/crop_result.dart';
 import 'package:crop_your_image/src/logic/shape.dart';
 import 'package:crop_your_image/src/widget/calculator.dart';
 import 'package:crop_your_image/src/widget/circle_crop_area_clipper.dart';
@@ -34,7 +35,7 @@ class Crop extends StatelessWidget {
   final Uint8List image;
 
   /// callback when cropping completed
-  final ValueChanged<Uint8List> onCropped;
+  final ValueChanged<CropResult> onCropped;
 
   /// fixed aspect ratio of cropping rect.
   /// null, by default, means no fixed aspect ratio.
@@ -132,7 +133,6 @@ class Crop extends StatelessWidget {
   /// (Advanced) Injected logic for parsing image detail.
   final ImageParser imageParser;
 
-
   /// builder to place a widget inside the cropping area
   final OverlayBuilder? overlayBuilder;
 
@@ -210,7 +210,7 @@ class Crop extends StatelessWidget {
 
 class _CropEditor extends StatefulWidget {
   final Uint8List image;
-  final ValueChanged<Uint8List> onCropped;
+  final ValueChanged<CropResult> onCropped;
   final double? aspectRatio;
   final double? initialSize;
   final CroppingRectBuilder? initialRectBuilder;
@@ -234,33 +234,32 @@ class _CropEditor extends StatefulWidget {
   final double scrollZoomSensitivity;
   final OverlayBuilder? overlayBuilder;
 
-  const _CropEditor({
-    super.key,
-    required this.image,
-    required this.onCropped,
-    required this.aspectRatio,
-    required this.initialSize,
-    required this.initialRectBuilder,
-    required this.initialArea,
-    this.withCircleUi = false,
-    required this.controller,
-    required this.onMoved,
-    required this.onStatusChanged,
-    required this.maskColor,
-    required this.baseColor,
-    required this.radius,
-    required this.cornerDotBuilder,
-    required this.clipBehavior,
-    required this.fixCropRect,
-    required this.progressIndicator,
-    required this.interactive,
-    required this.willUpdateScale,
-    required this.imageCropper,
-    required this.formatDetector,
-    required this.imageParser,
-    required this.scrollZoomSensitivity,
-    this.overlayBuilder
-  });
+  const _CropEditor(
+      {super.key,
+      required this.image,
+      required this.onCropped,
+      required this.aspectRatio,
+      required this.initialSize,
+      required this.initialRectBuilder,
+      required this.initialArea,
+      this.withCircleUi = false,
+      required this.controller,
+      required this.onMoved,
+      required this.onStatusChanged,
+      required this.maskColor,
+      required this.baseColor,
+      required this.radius,
+      required this.cornerDotBuilder,
+      required this.clipBehavior,
+      required this.fixCropRect,
+      required this.progressIndicator,
+      required this.interactive,
+      required this.willUpdateScale,
+      required this.imageCropper,
+      required this.formatDetector,
+      required this.imageParser,
+      required this.scrollZoomSensitivity,
+      this.overlayBuilder});
 
   @override
   _CropEditorState createState() => _CropEditorState();
@@ -464,25 +463,36 @@ class _CropEditorState extends State<_CropEditor> {
 
     widget.onStatusChanged?.call(CropStatus.cropping);
 
-    // use compute() not to block UI update
-    final cropResult = await compute(
-      _cropFunc,
-      [
-        widget.imageCropper,
-        _parsedImageDetail!.image,
-        Rect.fromLTWH(
-          (_cropRect.left - _imageRect.left) * screenSizeRatio / _scale,
-          (_cropRect.top - _imageRect.top) * screenSizeRatio / _scale,
-          _cropRect.width * screenSizeRatio / _scale,
-          _cropRect.height * screenSizeRatio / _scale,
-        ),
-        withCircleShape,
-        _detectedFormat,
-      ],
-    );
+    final left = (_cropRect.left - _imageRect.left) * screenSizeRatio / _scale;
+    final top = (_cropRect.top - _imageRect.top) * screenSizeRatio / _scale;
+    final width = _cropRect.width * screenSizeRatio / _scale;
+    final height = _cropRect.height * screenSizeRatio / _scale;
 
-    widget.onCropped(cropResult);
-    widget.onStatusChanged?.call(CropStatus.ready);
+    // use compute() not to block UI update
+    late CropResult cropResult;
+    try {
+      final image = await compute(
+        _cropFunc,
+        [
+          widget.imageCropper,
+          _parsedImageDetail!.image,
+          Rect.fromLTWH(
+            left.roundToPlaces(5),
+            top.roundToPlaces(5),
+            width.roundToPlaces(5),
+            height.roundToPlaces(5),
+          ),
+          withCircleShape,
+          _detectedFormat,
+        ],
+      );
+      cropResult = CropResult(image, null, null);
+      widget.onCropped(cropResult);
+    } catch (e, trace) {
+      cropResult = CropResult(null, e, trace);
+    } finally {
+      widget.onStatusChanged?.call(CropStatus.ready);
+    }
   }
 
   // for zooming
@@ -790,4 +800,10 @@ FutureOr<Uint8List> _cropFunc(List<dynamic> args) {
     bottomRight: Offset(rect.right, rect.bottom),
     shape: withCircleShape ? ImageShape.circle : ImageShape.rectangle,
   );
+}
+
+extension on double {
+  double roundToPlaces(int places) {
+    return (this * pow(10, places)).round() / pow(10, places);
+  }
 }

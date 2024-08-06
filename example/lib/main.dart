@@ -59,7 +59,7 @@ class _CropSampleState extends State<CropSample> {
   var _isSumbnail = false;
   var _isCropping = false;
   var _isCircleUi = false;
-  Uint8List? _croppedData;
+  Crop? _croppedData;
   var _statusText = '';
 
   @override
