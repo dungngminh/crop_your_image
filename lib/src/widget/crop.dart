@@ -2,8 +2,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:crop_your_image/crop_your_image.dart';
-import 'package:crop_your_image/src/logic/cropper/crop_result.dart';
-import 'package:crop_your_image/src/logic/shape.dart';
 import 'package:crop_your_image/src/widget/calculator.dart';
 import 'package:crop_your_image/src/widget/circle_crop_area_clipper.dart';
 import 'package:crop_your_image/src/widget/constants.dart';
@@ -139,6 +137,9 @@ class Crop extends StatelessWidget {
   // Color for default dot
   final Color defaultDotColor;
 
+  // Image fit
+  final BoxFit imageFit;
+
   Crop({
     super.key,
     required this.image,
@@ -166,6 +167,7 @@ class Crop extends StatelessWidget {
     ImageParser? imageParser,
     this.scrollZoomSensitivity = 0.05,
     this.overlayBuilder,
+    this.imageFit = BoxFit.contain,
   })  : assert((initialSize ?? 1.0) <= 1.0,
             'initialSize must be less than 1.0, or null meaning not specified.'),
         this.imageParser = imageParser ?? defaultImageParser;
@@ -206,6 +208,7 @@ class Crop extends StatelessWidget {
             imageParser: imageParser,
             overlayBuilder: overlayBuilder,
             defaultDotColor: defaultDotColor,
+            imageFit: imageFit,
           ),
         );
       },
@@ -239,6 +242,7 @@ class _CropEditor extends StatefulWidget {
   final double scrollZoomSensitivity;
   final OverlayBuilder? overlayBuilder;
   final Color defaultDotColor;
+  final BoxFit imageFit;
 
   const _CropEditor(
       {super.key,
@@ -266,6 +270,7 @@ class _CropEditor extends StatefulWidget {
       required this.imageParser,
       required this.scrollZoomSensitivity,
       required this.defaultDotColor,
+      this.imageFit = BoxFit.contain,
       this.overlayBuilder});
 
   @override
@@ -631,24 +636,37 @@ class _CropEditorState extends State<_CropEditor> {
                   onScaleUpdate: widget.interactive ? _updateScale : null,
                   child: Container(
                     color: widget.baseColor,
-                    width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.height,
+                    width: widget.imageFit == BoxFit.cover
+                        ? null
+                        : MediaQuery.of(context).size.width,
+                    height: widget.imageFit == BoxFit.cover
+                        ? null
+                        : MediaQuery.of(context).size.height,
                     child: Stack(
                       children: [
-                        Positioned(
-                          left: _imageRect.left,
-                          top: _imageRect.top,
-                          child: Image.memory(
-                            widget.image,
-                            width: _isFitVertically
-                                ? null
-                                : MediaQuery.of(context).size.width * _scale,
-                            height: _isFitVertically
-                                ? MediaQuery.of(context).size.height * _scale
-                                : null,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
+                        widget.imageFit == BoxFit.cover
+                            ? Positioned.fill(
+                                child: Image.memory(
+                                  widget.image,
+                                  fit: widget.imageFit,
+                                ),
+                              )
+                            : Positioned(
+                                left: _imageRect.left,
+                                top: _imageRect.top,
+                                child: Image.memory(
+                                  widget.image,
+                                  width: _isFitVertically
+                                      ? null
+                                      : MediaQuery.of(context).size.width *
+                                          _scale,
+                                  height: _isFitVertically
+                                      ? MediaQuery.of(context).size.height *
+                                          _scale
+                                      : null,
+                                  fit: widget.imageFit,
+                                ),
+                              ),
                       ],
                     ),
                   ),
