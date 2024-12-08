@@ -21,11 +21,8 @@ abstract class Calculator {
   double screenSizeRatio(ImageDetail targetImage, Size screenSize);
 
   /// calculates [ViewportBasedRect] of the result of user moving the cropping area.
-  ViewportBasedRect moveRect(
-    ViewportBasedRect original,
-    double deltaX,
-    double deltaY,
-    ViewportBasedRect imageRect,
+  ViewportBasedRect moveRect(ViewportBasedRect original, double deltaX,
+      double deltaY, ViewportBasedRect imageRect,
   ) {
     if (original.left + deltaX < imageRect.left) {
       deltaX = (original.left - imageRect.left) * -1;

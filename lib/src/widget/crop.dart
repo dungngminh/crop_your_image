@@ -331,7 +331,8 @@ class _CropEditorState extends State<_CropEditor> {
       }
       ..onImageChanged = _resetImage
       ..onChangeCropRect = (newCropRect) {
-        cropRect = calculator.correct(newCropRect, _imageRect);
+        cropRect = calculator.correct(newCropRect,
+            widget.imageFit == BoxFit.cover ? widgetRect : _imageRect);
       }
       ..onChangeArea = (newArea) {
         _resizeWith(_aspectRatio, newArea);
@@ -607,6 +608,22 @@ class _CropEditorState extends State<_CropEditor> {
     });
   }
 
+  Rect get widgetRect {
+    try {
+      final renderBox = context.findRenderObject() as RenderBox?;
+      final size = renderBox?.size ?? Size.zero;
+      final dotSize = 8.0;
+      return Rect.fromLTRB(
+        dotSize,
+        dotSize,
+        size.width - dotSize,
+        size.height - dotSize,
+      );
+    } catch (e) {
+      return Rect.zero;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return _isImageLoading
@@ -636,10 +653,12 @@ class _CropEditorState extends State<_CropEditor> {
                   onScaleUpdate: widget.interactive ? _updateScale : null,
                   child: Container(
                     color: widget.baseColor,
-                    width: widget.imageFit == BoxFit.cover
+                    width: widget.imageFit == BoxFit.cover ||
+                            widget.imageFit == BoxFit.fill
                         ? null
                         : MediaQuery.of(context).size.width,
-                    height: widget.imageFit == BoxFit.cover
+                    height: widget.imageFit == BoxFit.cover ||
+                            widget.imageFit == BoxFit.fill
                         ? null
                         : MediaQuery.of(context).size.height,
                     child: Stack(
@@ -705,7 +724,9 @@ class _CropEditorState extends State<_CropEditor> {
                         _cropRect,
                         details.delta.dx,
                         details.delta.dy,
-                        _imageRect,
+                        widget.imageFit == BoxFit.cover
+                            ? widgetRect
+                            : _imageRect,
                       );
                     },
                     child: Container(
@@ -726,7 +747,10 @@ class _CropEditorState extends State<_CropEditor> {
                             _cropRect,
                             details.delta.dx,
                             details.delta.dy,
-                            _imageRect,
+                            widget.imageFit == BoxFit.cover ||
+                                    widget.imageFit == BoxFit.fill
+                                ? widgetRect
+                                : _imageRect,
                             _aspectRatio,
                           );
                         },
@@ -746,7 +770,10 @@ class _CropEditorState extends State<_CropEditor> {
                             _cropRect,
                             details.delta.dx,
                             details.delta.dy,
-                            _imageRect,
+                            widget.imageFit == BoxFit.cover ||
+                                    widget.imageFit == BoxFit.fill
+                                ? widgetRect
+                                : _imageRect,
                             _aspectRatio,
                           );
                         },
@@ -766,7 +793,10 @@ class _CropEditorState extends State<_CropEditor> {
                             _cropRect,
                             details.delta.dx,
                             details.delta.dy,
-                            _imageRect,
+                            widget.imageFit == BoxFit.cover ||
+                                    widget.imageFit == BoxFit.fill
+                                ? widgetRect
+                                : _imageRect,
                             _aspectRatio,
                           );
                         },
@@ -786,7 +816,10 @@ class _CropEditorState extends State<_CropEditor> {
                             _cropRect,
                             details.delta.dx,
                             details.delta.dy,
-                            _imageRect,
+                            widget.imageFit == BoxFit.cover ||
+                                    widget.imageFit == BoxFit.fill
+                                ? widgetRect
+                                : _imageRect,
                             _aspectRatio,
                           );
                         },
