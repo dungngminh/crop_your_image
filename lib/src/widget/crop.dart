@@ -136,6 +136,9 @@ class Crop extends StatelessWidget {
   /// builder to place a widget inside the cropping area
   final OverlayBuilder? overlayBuilder;
 
+  // Color for default dot
+  final Color defaultDotColor;
+
   Crop({
     super.key,
     required this.image,
@@ -152,6 +155,7 @@ class Crop extends StatelessWidget {
     this.baseColor = Colors.white,
     this.radius = 0,
     this.cornerDotBuilder,
+    this.defaultDotColor = Colors.white,
     this.clipBehavior = Clip.hardEdge,
     this.fixCropRect = false,
     this.progressIndicator = const SizedBox.shrink(),
@@ -201,6 +205,7 @@ class Crop extends StatelessWidget {
             formatDetector: formatDetector,
             imageParser: imageParser,
             overlayBuilder: overlayBuilder,
+            defaultDotColor: defaultDotColor,
           ),
         );
       },
@@ -233,6 +238,7 @@ class _CropEditor extends StatefulWidget {
   final ImageParser imageParser;
   final double scrollZoomSensitivity;
   final OverlayBuilder? overlayBuilder;
+  final Color defaultDotColor;
 
   const _CropEditor(
       {super.key,
@@ -259,6 +265,7 @@ class _CropEditor extends StatefulWidget {
       required this.formatDetector,
       required this.imageParser,
       required this.scrollZoomSensitivity,
+      required this.defaultDotColor,
       this.overlayBuilder});
 
   @override
@@ -707,7 +714,7 @@ class _CropEditorState extends State<_CropEditor> {
                         },
                   child: widget.cornerDotBuilder
                           ?.call(dotTotalSize, EdgeAlignment.topLeft) ??
-                      const DotControl(),
+                      DotControl(color: widget.defaultDotColor),
                 ),
               ),
               Positioned(
@@ -727,7 +734,7 @@ class _CropEditorState extends State<_CropEditor> {
                         },
                   child: widget.cornerDotBuilder
                           ?.call(dotTotalSize, EdgeAlignment.topRight) ??
-                      const DotControl(),
+                      DotControl(color: widget.defaultDotColor),
                 ),
               ),
               Positioned(
@@ -747,7 +754,7 @@ class _CropEditorState extends State<_CropEditor> {
                         },
                   child: widget.cornerDotBuilder
                           ?.call(dotTotalSize, EdgeAlignment.bottomLeft) ??
-                      const DotControl(),
+                      DotControl(color: widget.defaultDotColor),
                 ),
               ),
               Positioned(
@@ -767,7 +774,7 @@ class _CropEditorState extends State<_CropEditor> {
                         },
                   child: widget.cornerDotBuilder
                           ?.call(dotTotalSize, EdgeAlignment.bottomRight) ??
-                      const DotControl(),
+                      DotControl(color: widget.defaultDotColor),
                 ),
               ),
             ],
